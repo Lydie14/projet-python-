@@ -1,7 +1,6 @@
 import pygame,sys
 from button import *
 
-
 pygame.init()
 
 s_w = 800
