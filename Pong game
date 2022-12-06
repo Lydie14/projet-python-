@@ -1,0 +1,126 @@
+import tkinter as tk
+import pygame,cv2
+import sys
+from cvzone.HandTrackingModule import HandDetector
+pygame.init()
+
+#Commencer le jeu
+def commencer():
+    cap = cv2.VideoCapture(0)  #lancer la caméra de l'ordinateur 
+    detector = HandDetector(maxHands=1) # Détecter une seule main 
+    clock = pygame.time.Clock() 
+
+    s_w = 800
+    s_h = 600
+    col1 = (255,255,0)
+    col2 = (128,0,0)
+
+    s_size =(s_w,s_h)
+    fps = 30
+    screen = pygame.display.set_mode(s_size)
+    clock = pygame.time.Clock()
+
+    # Definir la taille de la balle
+    ball = pygame.Rect(s_w/2 - 15,s_h/2 - 15,30,30)
+    speedy = 5
+    speedx = 5
+
+
+    #DECLARER LES PADLLES
+    paddle1 = pygame.Rect(10, s_h/2, 10,80)
+    paddle2 = pygame.Rect(s_w-10,s_h/2,10,80)
+
+
+    while True:
+        success, img = cap.read()
+
+        img = cv2.flip(img, 1)
+        hands, img = detector.findHands(img, flipType=False)
+        if hands:
+            lmList = hands[0]['lmList']  # hands
+            pointIndex = lmList[8][1]  # coordonnées x et y du bout de l'index
+            paddle1.y = pointIndex
+        cv2.imshow('image', img)
+        
+    # pour faire boucollisionger la balle
+        ball.y = ball.y + speedy
+        ball.x = ball.x + speedx
+        
+    
+        # imposer un limiteur pour la balle
+        if ball.x<0 or ball.x>775:
+            speedx = -1*speedx
+        if ball.y<0 or ball.y>565:
+            speedy = -1*speedy
+
+
+        # imposer un limiteur pour les padelles
+        if paddle1.y<0:
+            paddle1.y=0
+        if paddle2.y<0:
+            paddle2.y=0
+        if paddle1.y > 750:
+            paddle1.y = 750
+        if paddle2.y > 750:
+            paddle2.y = 750
+
+        #COLIISION
+        if ball.colliderect(paddle1)or ball.colliderect(paddle2):
+            speedx= -1*speedx
+
+        #automove
+        paddle2.y = ball.y
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+
+        screen.fill('white')
+        pygame.draw.ellipse(screen,col1,ball)
+        pygame.draw.rect(screen, col1, paddle1)
+        pygame.draw.rect(screen, col2, paddle2)
+
+        pygame.display.update()
+        clock.tick(fps)
+
+if __name__ == '__commencer__':
+    commencer()
+
+#Instructions du jeu 
+def instructions():
+    newWindow = tk.Toplevel(app)
+    newWindow.geometry('400x300')
+    newWindow.title('Instructions du jeu')
+    labelExample = tk.Label(newWindow, text = "Utilisez votre main pour diriger votre palette")
+    labelExample.pack()
+
+
+if __name__ == '__instructions__':
+    instructions()
+
+
+app = tk.Tk()
+app.title('PONG GAME MLY')
+# Personnaliser la couleur de l'arrière-plan de la fenêtre principale :
+app.config(bg = "#87CEEB")
+app.geometry('640x480')
+# Limiter les dimensions d’affichage de la fenêtre principale :
+app.maxsize(800,600)
+app.minsize(400,400)
+buttonExample = tk.Button(app, 
+              text="Commencer le jeu",
+              command=commencer)
+buttonExample.pack()
+
+buttonExample = tk.Button(app, 
+              text="Instructions du jeu ",
+              command=instructions)
+buttonExample.pack()
+
+buttonExample = tk.Button(app, 
+              text="Quitter ",
+              command=app.quit)
+buttonExample.pack()
+
+app.mainloop()
